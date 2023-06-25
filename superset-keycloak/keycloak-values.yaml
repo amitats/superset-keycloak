@@ -6,32 +6,13 @@ image:
   tag: latest-dev
   pullPolicy: IfNotPresent
 
-ingress:
-  annotations:
-    nginx.ingress.kubernetes.io/client-body-buffer-size: 10M
-    nginx.ingress.kubernetes.io/proxy-body-size: 10M
-    nginx.ingress.kubernetes.io/proxy-buffering: "on"
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "10M"
-    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-  enabled: true
-  ingressClassName: nginx
-  path: /
-  pathType: ImplementationSpecific
-  hosts:
-    - <YOUR_HOST_NAME>
-  tls:
-   - secretName: <TLS_SECRET_NAME>
-     hosts:
-       - <YOUR_HOST_NAME>
-
-
 ## Superset node configuration
 supersetNode:
   connections:
-    db_host: <POSTGRES_SERVICE_NAME>.NAMESPACE.svc.cluster.local
+    db_host: mysuperset-postgresql.superset.svc.cluster.local
     db_port: "5432"
-    db_user: <USERNAME>
-    db_pass: <PASSWORD>
+    db_user: superset
+    db_pass: superset
     db_name: superset
   
 postgresql:
@@ -40,13 +21,13 @@ postgresql:
 extraEnv:
   # GUNICORN_TIMEOUT: 300
   PUBLIC_ROLE_LIKE: Gamma
-  OIDC_OPENID_REALM: <YOUR_REALM_NAME>
+  OIDC_OPENID_REALM: superset
   APP_NAME: Superset
   BABEL_DEFAULT_LOCALE: pt_BR
   DATABASE_DB: superset
-  DATABASE_HOST: <POSTGRES_SERVICE_NAME>.NAMESPACE.svc.cluster.local
-  DATABASE_PASSWORD: <PASSWORD>
-  DATABASE_USER: <USERNAME>
+  DATABASE_HOST: mysuperset-postgresql.superset.svc.cluster.local
+  DATABASE_PASSWORD: superset
+  DATABASE_USER: superset
   REDIS_HOST: superset-keycloak-redis-master
   REDIS_PORT: 6379
   # database engine specific environment variables
@@ -54,8 +35,8 @@ extraEnv:
   DATABASE_PORT: 5432
   DATABASE_DIALECT: postgresql
   POSTGRES_DB: superset
-  POSTGRES_USER: <USERNAME>
-  POSTGRES_PASSWORD: <PASSWORD>
+  POSTGRES_USER: superset
+  POSTGRES_PASSWORD: superset
 
 
 init:
@@ -68,7 +49,8 @@ init:
 
 extraSecrets:
   client_secret.json: |
-    <YOUR_CLIENT_SECRET_JSON_STRING>
+    {    "web": {      "issuer": "http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/auth/realms/superset",      "auth_uri": "http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/auth/realms/superset/protocol/openid-connect/auth",      "client_id": "mysuperset2",      "client_secret": "3KJYBsgsNyvPUIWdrrPzVstojctqMhSL",      "redirect_uris": ["http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/*"],      "userinfo_uri": "http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/auth/realms/superset/protocol/openid-connect/userinfo",      "token_uri": "http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/auth/realms/superset/protocol/openid-connect/token",      "token_introspection_uri": "http://a027ab9764b89415eb5529105a993320-1659153742.eu-central-1.elb.amazonaws.com:8080/auth/realms/superset/protocol/openid-connect/token/introspect"    }}
+
 
     
   keycloak_security_manager.py: |
@@ -127,6 +109,7 @@ extraSecrets:
     
             return redirect(
                 oidc.client_secrets.get('issuer') + '/protocol/openid-connect/logout?redirect_uri=' + quote(redirect_url))
+
 
 bootstrapScript: |
   #!/bin/bash
